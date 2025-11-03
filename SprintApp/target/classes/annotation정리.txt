@@ -1,0 +1,119 @@
+스프링 기본 구성 및 빈 관련 어노테이션
+
+applicationContext.xml 관련
+<beans:bean>
+	태그는 스프링에서 관리할 객체(빈)를 정의하는 기본적인 태그이다
+	의존성 주입 : XML에서는 빈 간의 의존성을 주입하기 위해 <property> 태그를 사용name 속성은 주입할 필드 이름이고, ref 속성은 주입할 빈의 id를 참조한다
+	
+<context:component-scan> 
+	설정한 특정 패키지 안의 클래스들을 스캔하고, Annotation을 확인 후 bean 인스턴스를 생성한다.
+	@Component, @Controller, @Service,@Repository,​ 등의 Annotation이 존재해야 bean을 생성할 수 있다.
+	@Autowired와 @Qualifier Annotation을 인식할 수 있다.
+	context:component-scan을 선언했다면 context:annotation-config를 선언할 필요가 없다.
+	(@Autowired와 @Qualifier를 인식할 수 있기 때문)                              
+	classPath에 Jackson이 있는 경우 JSON 쓰기 읽기를 지원 와 같은 작업 적용
+
+<context:annotation-config>
+	ApplicationContext 안에 이미 등록된 Bean들의 Annotation을 활성화하기 위해 사용된다.
+	어딘가에 bean을 등록해놓으면 @Autowired와 @Qualifier Annotation을 해석해서 가져다 쓰겠다는 의미이다.
+	@Autowired와 @Qualifier 두 가지만 해결한다.따라서, 위 태그를 사용하더라도 xml에 bean을 반드시 선언해야 한다.
+
+<mvc:annation-driven?
+	Spring MVC 컴포넌트들을 디폴트 설정으로 활성화한다.
+	Spring MVC @Controller에 요청을 보내기 위해 필요한 HandlerMapping과 HandlerAdapter를 Bean으로 등록한다.
+	HandlerMapping : HTTP 요청정보를 이용해서 컨트롤러를 찾아주는 기능 즉, 요청 URL을 보고 어떤Controller가 처리할지 결정하는 역할
+	HandlerAdapter : HandlerMapping을 통해 찾은 컨트롤러를 직접 실행하는 기능을 수행
+
+<context:property-placeholder>
+	애플리케이션에서 외부 설정 파일(예: application.properties)의 값을 가져와서 빈에 주입할 때는 property-placeholder를 사용 
+	ex)
+	<context:property-placeholder location="classpath:application.properties" />
+	<bean id="myService" class="com.example.MyServiceImpl">
+    	<property name="url" value="${service.url}" />
+	</bean>
+
+aop 관련
+	<bean id="loggingAspect" class="com.example.LoggingAspect" />
+	<aop:config>
+	    <aop:aspect ref="loggingAspect">
+	        <aop:pointcut id="serviceMethods" expression="execution(* com.example.*.*(..))" />
+	        <aop:before method="logBefore" pointcut-ref="serviceMethods" />
+	    </aop:aspect>
+	</aop:config>
+
+transaction 관련
+	<tx:annotation-driven transaction-manager="transactionManager" />
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+    	<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	
+java파일에서 사용하는 annotation 정리
+
+1. 스프링 기본 구성 및 빈 관련 어노테이션
+
+	@Component: 스프링 컨테이너에서 관리되는 일반적인 빈을 정의하는 어노테이션. 클래스에 붙여 사용하며, 자동으로 빈으로 등록됨.
+	@Service: @Component의 특화된 형태로, 비즈니스 로직을 처리하는 서비스 계층에서 사용되는 어노테이션. 빈으로 등록됨.
+	@Repository: 데이터 액세스 계층(DAO)에서 사용되며, 데이터 접근 관련 예외를 스프링의 예외로 변환하는 어노테이션.
+	@Controller: 웹 요청을 처리하고 뷰를 반환하는 프레젠테이션 계층에서 사용되는 어노테이션.
+	@RestController: @Controller와 비슷하지만, 모든 메서드가 JSON 또는 XML 데이터를 반환하는 RESTful 웹 서비스용 컨트롤러에 사용됨.
+
+2. 의존성 주입 관련 어노테이션
+	@Autowired: 스프링 컨테이너에서 빈을 찾아 자동으로 의존성을 주입하는 어노테이션. 생성자, 필드, 메서드에 사용 가능.
+	@Qualifier: @Autowired와 함께 사용되어, 동일한 타입의 여러 빈 중 특정한 빈을 선택할 때 사용되는 어노테이션.
+	<참고로 알기>	
+	@Inject: 자바 표준 의존성 주입 어노테이션으로, @Autowired와 유사한 기능을 제공함.
+	@Resource: 의존성을 이름을 기준으로 주입하는 자바 표준 어노테이션.
+
+3. AOP 관련 어노테이션
+	@Aspect: 해당 클래스가 AOP에서 Aspect(횡단 관심사)를 정의하는 클래스임을 나타내는 어노테이션.
+	@Before: 지정된 메서드가 실행되기 전에 실행될 로직을 정의하는 어노테이션.
+	@After: 지정된 메서드가 실행된 후에 실행될 로직을 정의하는 어노테이션.
+	@AfterReturning: 메서드가 정상적으로 실행된 후에만 실행될 로직을 정의하는 어노테이션.
+	@AfterThrowing: 메서드가 예외를 던졌을 때 실행될 로직을 정의하는 어노테이션.
+	@Around: 메서드 실행 전후에 로직을 실행할 수 있게 하는 어노테이션.
+
+4. 트랜잭션 관리 관련 어노테이션
+	@Transactional: 메서드 또는 클래스에 트랜잭션을 적용하기 위한 어노테이션. 트랜잭션을 시작하고, 정상 종료 시 커밋하거나 예외 발생 시 롤백함.
+	
+5. Spring MVC 및 웹 관련 어노테이션
+	@RequestMapping: 특정 URL과 HTTP 메서드(GET, POST 등)에 대한 요청을 처리할 메서드나 클래스를 매핑하는 어노테이션.
+	@GetMapping: HTTP GET 요청을 처리하는 메서드를 정의하는 어노테이션. @RequestMapping(method = RequestMethod.GET)의 축약형.
+	@PostMapping: HTTP POST 요청을 처리하는 메서드를 정의하는 어노테이션.
+	@PutMapping: HTTP PUT 요청을 처리하는 메서드를 정의하는 어노테이션.
+	@DeleteMapping: HTTP DELETE 요청을 처리하는 메서드를 정의하는 어노테이션.
+	@RequestParam: HTTP 요청의 파라미터를 메서드의 파라미터로 매핑하는 어노테이션.
+	@PathVariable: URL 경로의 일부를 메서드의 파라미터로 바인딩하는 어노테이션.
+	@ModelAttribute: 요청 파라미터를 특정 객체에 바인딩하는 어노테이션.
+	@RequestBody: HTTP 요청 본문을 자바 객체로 변환하여 메서드 파라미터로 매핑하는 어노테이션. 주로 JSON 데이터를 처리할 때 사용.
+	@ResponseBody: 메서드의 반환 값을 HTTP 응답 본문으로 직접 변환하는 어노테이션.
+	@ExceptionHandler: 특정 예외가 발생했을 때 이를 처리하는 메서드를 정의합니다.
+	@EnableWebMvc: Spring MVC의 기본 설정을 활성화합니다. DispatcherServlet, ViewResolver 등 MVC의 필수 요소들을 자동으로 설정합니다
+	@CrossOrigin: CORS(Cross-Origin Resource Sharing) 요청을 허용할 때 사용합니다.
+	
+6. @RequestMapping이 붙어있는 메소드의 인자에 사용할 수 있는 어노테이션
+		@RequestParam : HTTP 요청에서 쿼리 스트링, 폼 데이터 등의 파라미터 값을 메서드의 파라미터에 매핑
+		@PathVariable : URL 경로에 포함된 값을 메서드의 파라미터에 매핑.
+		@RequestBody : HTTP 요청의 본문을 자바 객체로 변환해서 메서드의 파라미터로 전달. 주로 JSON이나 XML 데이터를 처리.
+		@ModelAttribute : 요청 파라미터나 세션 데이터를 특정 객체에 바인딩할 때 사용. HTML 폼 데이터 처리에 주로 사용됨.
+		<중요도낮은 어노테이션>	
+		@CookieValue : HTTP 요청에 포함된 쿠키 값을 메서드의 파라미터로 매핑.
+		@SessionAttribute : HTTP 세션에서 특정 속성 값을 메서드 파라미터로 가져올 때 사용
+		@RequestPart : 멀티파트 요청(파일 업로드 등)에서 특정 부분을 메서드 파라미터에 매핑할 때 사용. 파일 업로드에서 주로 사용됨.
+		
+7. 스프링 부트 관련 어노테이션
+	@SpringBootApplication: 스프링 부트 애플리케이션의 시작 클래스를 나타내는 어노테이션. @Configuration, @EnableAutoConfiguration, @ComponentScan을 포함함.
+	@Configuration: 자바 기반 설정을 정의하는 클래스를 나타내는 어노테이션.
+	@Bean: 메서드에서 반환된 객체를 스프링 컨테이너의 빈으로 등록하기 위한 어노테이션.
+	@EnableAutoConfiguration: 스프링 부트에서 자동 설정을 활성화하는 어노테이션.
+	@ComponentScan: 스프링이 컴포넌트를 스캔하고 빈으로 등록하도록 설정하는 어노테이션.
+
+<참고로 알면 좋은 어노테이션들>
+8. 유효성 검사 관련 어노테이션
+	@Valid: 자바 빈의 유효성 검사를 실행하기 위해 사용하는 어노테이션.
+	@NotNull, @Size, @Pattern: 필드의 유효성을 검사하는 데 사용되는 어노테이션으로, null이 아니어야 하거나, 크기가 일정 범위 내에 있거나, 정규식 패턴을 만족해야 함.
+
+9. 테스트 관련 어노테이션
+	@Test: JUnit에서 테스트 메서드를 정의하는 어노테이션.
+	@RunWith(SpringRunner.class): 스프링 컨텍스트에서 테스트를 실행할 때 사용하는 어노테이션.
+	@SpringBootTest: 통합 테스트를 실행하기 위해 스프링 부트 애플리케이션의 전체 컨텍스트를 로드하는 어노테이션.
